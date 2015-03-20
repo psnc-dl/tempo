@@ -749,22 +749,28 @@ var Tempo = (function (tempo) {
         tags: {
             'if': function (renderer, i, match, args, body) {
                 var member_regex = utils.memberRegex(i);
-
+                
                 var expr = args[0].replace(/&amp;/g, '&').replace(/&gt;/g, '>').replace(/&lt;/g, '<');
-                expr = expr.replace(new RegExp(member_regex, 'gi'), function (match) {
+                var replExpr = expr.replace(new RegExp(member_regex, 'gi'), function (match) {
                     return 'i.' + match;
-                });
+                });                
+                
+                if (expr !== replExpr) {
+                    expr = replExpr;
+                    var blockRegex = new RegExp(renderer.templates.tag_brace_left + '[ ]?else[ ]?' + renderer.templates.tag_brace_right, 'g');
+                    var blocks = body.split(blockRegex);
 
-                var blockRegex = new RegExp(renderer.templates.tag_brace_left + '[ ]?else[ ]?' + renderer.templates.tag_brace_right, 'g');
-                var blocks = body.split(blockRegex);
+                    if (eval(expr)) {
+                        return blocks[0];
+                    } else if (blocks.length > 1) {
+                        return blocks[1];
+                    }
 
-                if (eval(expr)) {
-                    return blocks[0];
-                } else if (blocks.length > 1) {
-                    return blocks[1];
+                    return '';
                 }
-
-                return '';
+                else {
+                    return '';
+                }
             }
         },
 
